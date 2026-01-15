@@ -10,7 +10,7 @@ async function sendDunningEmail(payment, emailNumber) {
                   from: process.env.EMAIL_FROM,
                   to: payment.customer_email,
                   subject: template.subject,
-                  html: template.html
+                  text: template.text
           });
           console.log(`Email #${emailNumber} sent to ${payment.customer_email}`, result);
           return { success: true, result };
