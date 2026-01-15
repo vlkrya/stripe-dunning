@@ -64,5 +64,11 @@ function email3(customer, amount, currency) {
                                                                                 </div>`
       };
 }
+// Get email template by number
+function getEmailTemplate(emailNumber, customer, amount, currency) {
+        const templates = { 1: email1, 2: email2, 3: email3 };
+        return templates[emailNumber](customer, amount, currency);
+}
 
-module.exports = { formatAmount, email1, email2, email3 };
+
+module.exports = { formatAmount, email1, email2, email3, getEmailTemplate };
