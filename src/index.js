@@ -132,6 +132,45 @@ cron.schedule('0 * * * *', async () => {
                 console.log('Dunning check complete');
 });
 
+// ============ TEST ENDPOINT ============
+// Test all 3 emails with 1 minute interval (remove in production!)
+app.get('/test-dunning', async (req, res) => {
+          const email = req.query.email || 'test@example.com';
+          const name = req.query.name || 'Test User';
+
+          // Create fake payment data for testing
+          const testPayment = {
+                      customer_name: name,
+                      customer_email: email,
+                      amount_due: 2900,
+                      currency: 'usd',
+                      stripe_invoice_id: 'test_' + Date.now()
+          };
+
+          res.json({ message: 'Test started! Check your email and Telegram.', email });
+
+          // Email #1 - immediately
+          console.log('TEST: Sending Email #1...');
+          await sendDunningEmail(testPayment, 1);
+          await notifyEmailSent(testPayment, 1);
+
+          // Email #2 - after 1 minute
+          setTimeout(async () => {
+                      console.log('TEST: Sending Email #2...');
+                      await sendDunningEmail(testPayment, 2);
+                      await notifyEmailSent(testPayment, 2);
+          }, 60000);
+
+          // Email #3 - after 2 minutes
+          setTimeout(async () => {
+                      console.log('TEST: Sending Email #3...');
+                      await sendDunningEmail(testPayment, 3);
+                      await notifyEmailSent(testPayment, 3);
+                      await notifyFinalWarning(testPayment);
+          }, 120000);
+});
+
+
 // ============ START SERVER ============
 
 async function start() {
