@@ -1,84 +1,71 @@
 // Форматируем сумму
 function formatAmount(cents, currency = 'usd') {
-        const amount = (cents / 100).toFixed(2);
-        const symbols = { usd: '$', eur: '€', rub: '₽' };
-        return `${symbols[currency] || '$'}${amount}`;
+          const amount = (cents / 100).toFixed(2);
+          const symbols = { usd: '$', eur: '€', rub: '₽' };
+          return `${symbols[currency] || '$'}${amount}`;
 }
 
 // Email #1 — Сразу после неудачного платежа
 function email1(customer, amount, currency) {
-        const name = customer.name || 'there';
-        return {
-                  subject: 'Quick heads up about your payment',
-                  text: `Hey ${name}!
+          const name = customer.name || 'there';
+          return {
+                      subject: 'Issue with your recent payment',
+                      text: `Hi ${name},
 
-                  It's Anastasia from Outreach Today.
+                      I noticed your recent payment of ${formatAmount(amount, currency)} for Outreach Today didn't go through.
 
-                  I just wanted to let you know that your payment of ${formatAmount(amount, currency)} didn't go through. This happens sometimes — it could be an expired card, insufficient funds, or just a temporary bank issue.
+                      This usually happens due to insufficient funds, an expired card, or a temporary bank hold. Nothing to worry about — we'll automatically retry in a few days.
 
-                  No worries though! Just update your payment info and we'll retry automatically.
+                      If you'd like to update your payment details beforehand, just reply to this email and I'll send you a direct link.
 
-                  If you have any questions or need help, just reply to this email. I'm here to help!
-
-                  Best,
-                  Anastasia
-                  Outreach Today
-                  https://outreach2day.com/`
-        };
+                      Thanks,
+                      Anastasia
+                      Customer Support, Outreach Today`
+          };
 }
 
 // Email #2 — Через 3 дня
 function email2(customer, amount, currency) {
-        const name = customer.name || 'there';
-        return {
-                  subject: 'Following up on your account',
-                  text: `Hey ${name}!
+          const name = customer.name || 'there';
+          return {
+                      subject: 'Following up on your payment',
+                      text: `Hi ${name},
 
-                  It's Anastasia again from Outreach Today.
+                      Just a quick follow-up — we still haven't been able to process your payment of ${formatAmount(amount, currency)}.
 
-                  I noticed we still haven't been able to process your payment of ${formatAmount(amount, currency)}. I wanted to check in and make sure everything is okay on your end.
+                      Your account is still active, but to avoid any interruption please update your payment method when you get a chance.
 
-                  Your account and all your data are still safe — I just need you to update your payment method so we can keep your subscription active.
+                      Reply to this email if you need a payment link or have any questions. Happy to help.
 
-                  Is there anything I can help you with? Maybe you have questions about your subscription or need to make some changes? Just hit reply and let me know.
-
-                  Best,
-                  Anastasia
-                  Outreach Today
-                  https://outreach2day.com/`
-        };
+                      Best,
+                      Anastasia
+                      Customer Support, Outreach Today`
+          };
 }
 
 // Email #3 — Через 7 дней (финальное предупреждение)
 function email3(customer, amount, currency) {
-        const name = customer.name || 'there';
-        return {
-                  subject: 'Your subscription needs attention',
-                  text: `Hey ${name},
+          const name = customer.name || 'there';
+          return {
+                      subject: 'Your Outreach Today subscription',
+                      text: `Hi ${name},
 
-                  It's Anastasia from Outreach Today one more time.
+                      I wanted to reach out one more time regarding your outstanding payment of ${formatAmount(amount, currency)}.
 
-                  I really don't want to see you go, but I have to let you know that your subscription will be cancelled in 48 hours if we can't process your payment of ${formatAmount(amount, currency)}.
+                      Unfortunately, if we're unable to process the payment within the next 48 hours, your subscription will be cancelled and you'll lose access to your account.
 
-                  Once cancelled, you'll lose access to your account and all your saved data.
+                      If there's anything I can help with — whether it's a payment issue or you'd like to discuss your subscription — please reply to this email. I'm here to help.
 
-                  If you want to keep your account, please update your payment info as soon as possible.
-
-                  If you've decided to cancel or if something came up, I totally understand. Just let me know by replying to this email so I know what's going on.
-
-                  Hope to hear from you!
-
-                  Best,
-                  Anastasia
-                  Outreach Today
-                  https://outreach2day.com/`
-        };
+                      Best,
+                      Anastasia
+                      Customer Support, Outreach Today`
+          };
 }
 
 // Выбор шаблона по номеру
 function getEmailTemplate(emailNumber, customer, amount, currency) {
-        const templates = { 1: email1, 2: email2, 3: email3 };
-        return templates[emailNumber](customer, amount, currency);
+          const templates = { 1: email1, 2: email2, 3: email3 };
+          return templates[emailNumber](customer, amount, currency);
 }
 
 module.exports = { getEmailTemplate, formatAmount };
