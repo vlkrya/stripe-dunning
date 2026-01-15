@@ -1,61 +1,68 @@
 function formatAmount(cents, currency = 'usd') {
-    const amount = (cents / 100).toFixed(2);
-    const symbols = { usd: '$', eur: '€', rub: '₽' };
-    return `${symbols[currency] || '$'}${amount}`;
+      const amount = (cents / 100).toFixed(2);
+      const symbols = { usd: '$', eur: '€', rub: '₽' };
+      return `${symbols[currency] || '$'}${amount}`;
 }
 
+// Email #1 - Friendly first reminder
 function email1(customer, amount, currency) {
-    return {
-          subject: 'Payment failed — action required',
-          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #333;">Hi ${customer.name || 'there'},</h2>
-                      <p>We tried to process your payment of <strong>${formatAmount(amount, currency)}</strong> for your Outreach Today subscription, but it didn't go through.</p>
-                            <p>This can happen for a few reasons:</p>
-                                  <ul><li>Insufficient funds</li><li>Expired card</li><li>Bank declined the transaction</li></ul>
-                                        <p><strong>What to do:</strong></p>
-                                              <p>Please update your payment method or ensure your card has sufficient funds.</p>
-                                                    <a href="https://billing.stripe.com/p/login/xxx" style="display: inline-block; background: #5469d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">Update Payment Method</a>
-                                                          <p>If you have any questions, just reply to this email.</p>
-                                                                <p>Best,<br>Outreach Today Team</p>
-                                                                    </div>`
-    };
+      return {
+              subject: 'Quick heads up about your payment',
+              html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #333;">Hi ${customer.name || 'there'},</h2>
+                          <p>We hope you're doing well! We wanted to let you know that we had a small hiccup processing your recent payment of <strong>${formatAmount(amount, currency)}</strong>.</p>
+                                <p>This happens sometimes and is usually easy to fix. Here are a few common reasons:</p>
+                                      <ul>
+                                              <li>The card on file may have expired</li>
+                                                      <li>There might be insufficient funds</li>
+                                                              <li>Your bank may have flagged the transaction</li>
+                                                                    </ul>
+                                                                          <p><strong>What you can do:</strong></p>
+                                                                                <p>Simply update your payment method or check with your bank, and we'll automatically retry the payment.</p>
+                                                                                      <p style="text-align: center; margin: 30px 0;">
+                                                                                              <a href="https://billing.stripe.com/p/login/xxx" style="display: inline-block; background: #5469d4; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">Update Payment Method</a>
+                                                                                                    </p>
+                                                                                                          <p>If you have any questions, feel free to reply to this email — we're happy to help!</p>
+                                                                                                                <p>Best regards,<br>The Support Team</p>
+                                                                                                                    </div>`
+      };
 }
 
+// Email #2 - Gentle follow-up
 function email2(customer, amount, currency) {
-    return {
-          subject: '⚠️ Your subscription is at risk',
-          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #333;">Hi ${customer.name || 'there'},</h2>
-                      <p>We still haven't been able to process your payment of <strong>${formatAmount(amount, currency)}</strong>.</p>
-                            <p style="background: #fff3cd; border: 1px solid #ffc107; padding: 16px; border-radius: 6px;"><strong>⚠️ Important:</strong> Please update your payment information to avoid any interruption to your service.</p>
-                                  <p>Your Outreach Today account and all your saved emails are still safe, but we need you to take action.</p>
-                                        <a href="https://billing.stripe.com/p/login/xxx" style="display: inline-block; background: #5469d4; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">Update Payment Method Now</a>
-                                              <p>Need help? Just reply to this email.</p>
-                                                    <p>Best,<br>Outreach Today Team</p>
-                                                        </div>`
-    };
+      return {
+              subject: 'Following up on your account',
+              html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #333;">Hi ${customer.name || 'there'},</h2>
+                          <p>We wanted to follow up on our previous email about the payment of <strong>${formatAmount(amount, currency)}</strong> that didn't go through.</p>
+                                <p>We completely understand that life gets busy, and these things can slip through the cracks. To make sure you don't lose access to your account, please take a moment to update your payment information.</p>
+                                      <p style="text-align: center; margin: 30px 0;">
+                                              <a href="https://billing.stripe.com/p/login/xxx" style="display: inline-block; background: #5469d4; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">Update Payment Method</a>
+                                                    </p>
+                                                          <p>If you're experiencing any issues or have questions about your subscription, we're here to help. Just reply to this email and we'll get back to you as soon as possible.</p>
+                                                                <p>Thank you for being with us!</p>
+                                                                      <p>Best regards,<br>The Support Team</p>
+                                                                          </div>`
+      };
 }
 
+// Email #3 - Final friendly reminder
 function email3(customer, amount, currency) {
-    return {
-          subject: '🚨 Final notice: 48 hours to save your account',
-          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #d9534f;">Hi ${customer.name || 'there'},</h2>
-                      <p>This is our final reminder about your overdue payment of <strong>${formatAmount(amount, currency)}</strong>.</p>
-                            <div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 16px; border-radius: 6px; margin: 16px 0;">
-                                    <strong>🚨 Your subscription will be cancelled in 48 hours</strong>
-                                            <p style="margin: 8px 0 0 0;">If we don't receive payment, your account will be deactivated.</p>
-                                                  </div>
-                                                        <a href="https://billing.stripe.com/p/login/xxx" style="display: inline-block; background: #d9534f; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">Pay Now & Keep Your Account</a>
-                                                              <p>If you're having trouble, please reply to this email immediately.</p>
-                                                                    <p>Best,<br>Outreach Today Team</p>
-                                                                        </div>`
-    };
+      return {
+              subject: 'Your subscription needs attention',
+              html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #333;">Hi ${customer.name || 'there'},</h2>
+                          <p>We've been trying to reach you about the outstanding payment of <strong>${formatAmount(amount, currency)}</strong>.</p>
+                                <p>We really value having you as a customer and don't want you to lose access to your account. This is our final reminder before we'll need to pause your subscription.</p>
+                                      <p><strong>Please update your payment method within the next 48 hours</strong> to keep your account active.</p>
+                                            <p style="text-align: center; margin: 30px 0;">
+                                                    <a href="https://billing.stripe.com/p/login/xxx" style="display: inline-block; background: #5469d4; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">Update Payment Now</a>
+                                                          </p>
+                                                                <p>If there's anything preventing you from completing this payment, or if you'd like to discuss your options, please don't hesitate to reach out. We're here to help find a solution that works for you.</p>
+                                                                      <p>Thank you for your attention to this matter.</p>
+                                                                            <p>Warm regards,<br>The Support Team</p>
+                                                                                </div>`
+      };
 }
 
-function getEmailTemplate(emailNumber, customer, amount, currency) {
-    const templates = { 1: email1, 2: email2, 3: email3 };
-    return templates[emailNumber](customer, amount, currency);
-}
-
-module.exports = { getEmailTemplate, formatAmount };
+module.exports = { formatAmount, email1, email2, email3 };
