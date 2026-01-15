@@ -11,69 +11,69 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Stripe webhook requires raw body
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-      const sig = req.headers['stripe-signature'];
-      let event;
+        const sig = req.headers['stripe-signature'];
+        let event;
 
            try {
-                   event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+                     event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
            } catch (err) {
-                   console.error('Webhook signature verification failed:', err.message);
-                   return res.status(400).send(`Webhook Error: ${err.message}`);
+                     console.error('Webhook signature verification failed:', err.message);
+                     return res.status(400).send(`Webhook Error: ${err.message}`);
            }
 
            console.log(`Received event: ${event.type}`);
 
            // Handle events
            switch (event.type) {
-               case 'invoice.payment_failed': {
-                         const invoice = event.data.object;
+                 case 'invoice.payment_failed': {
+                             const invoice = event.data.object;
 
-                         // Get customer data
-                         const customer = await stripe.customers.retrieve(invoice.customer);
+                             // Get customer data
+                             const customer = await stripe.customers.retrieve(invoice.customer);
 
-                         // Add to database
-                         const result = db.addFailedPayment({
-                                     customerId: invoice.customer,
-                                     invoiceId: invoice.id,
-                                     email: customer.email,
-                                     name: customer.name,
-                                     amountDue: invoice.amount_due,
-                                     currency: invoice.currency
-                         });
+                             // Add to database
+                             const result = db.addFailedPayment({
+                                           customerId: invoice.customer,
+                                           invoiceId: invoice.id,
+                                           email: customer.email,
+                                           name: customer.name,
+                                           amountDue: invoice.amount_due,
+                                           currency: invoice.currency
+                             });
 
-                         // If this is a new record (not duplicate)
-                         if (result.changes > 0) {
-                                     const payment = db.getByInvoice(invoice.id);
+                             // If this is a new record (not duplicate)
+                             if (result.changes > 0) {
+                                           const payment = db.getByInvoice(invoice.id);
 
-                           // Send Email #1 immediately
-                           await sendDunningEmail(payment, 1);
-                                     db.markEmailSent(invoice.id);
+                               // Send Email #1 immediately
+                               await sendDunningEmail(payment, 1);
+                                           db.markEmailSent(invoice.id);
 
-                           // Notify in Telegram
-                           await notifyNewFailedPayment(payment);
-                                     await notifyEmailSent(payment, 1);
-                         }
+                               // Notify in Telegram
+                               await notifyNewFailedPayment(payment);
+                                           await notifyEmailSent(payment, 1);
+                             }
 
-                         break;
-               }
+                             break;
+                 }
 
-               case 'invoice.paid': {
-                         const invoice = event.data.object;
-                         const payment = db.getByInvoice(invoice.id);
+                 case 'invoice.paid': {
+                             const invoice = event.data.object;
+                             const payment = db.getByInvoice(invoice.id);
 
-                         if (payment && payment.status === 'active') {
-                                     db.removeByInvoice(invoice.id);
-                                     await notifyPaymentResolved(payment);
-                         }
+                             if (payment && payment.status === 'active') {
+                                           db.removeByInvoice(invoice.id);
+                                           await notifyPaymentResolved(payment);
+                             }
 
-                         break;
-               }
+                             break;
+                 }
 
-               case 'customer.subscription.deleted': {
-                         const subscription = event.data.object;
-                         db.removeByCustomer(subscription.customer);
-                         break;
-               }
+                 case 'customer.subscription.deleted': {
+                             const subscription = event.data.object;
+                             db.removeByCustomer(subscription.customer);
+                             break;
+                 }
            }
 
            res.json({ received: true });
@@ -84,58 +84,65 @@ app.use(express.json());
 
 // Healthcheck
 app.get('/', (req, res) => {
-      res.json({ 
-                   status: 'ok', 
-              service: 'Stripe Dunning Service',
-              activePayments: db.getAllActive().length
-      });
+        res.json({ 
+                     status: 'ok', 
+                  service: 'Stripe Dunning Service',
+                  activePayments: db.getAllActive().length
+        });
 });
 
 // Stats (can be removed in production)
 app.get('/stats', (req, res) => {
-      const active = db.getAllActive();
-      res.json({
-              activeFailedPayments: active.length,
-              payments: active.map(p => ({
-                        email: p.customer_email,
-                        emailsSent: p.emails_sent,
-                        createdAt: p.created_at
-              }))
-      });
+        const active = db.getAllActive();
+        res.json({
+                  activeFailedPayments: active.length,
+                  payments: active.map(p => ({
+                              email: p.customer_email,
+                              emailsSent: p.emails_sent,
+                              createdAt: p.created_at
+                  }))
+        });
 });
 
 // ============ CRON JOBS ============
 
 // Check every hour who needs to receive email
 cron.schedule('0 * * * *', async () => {
-      console.log('Running dunning check...');
+        console.log('Running dunning check...');
 
                 // Email #2 - after 3 days
                 const dueForEmail2 = db.getDueForEmail(2, 3);
-      for (const payment of dueForEmail2) {
-              console.log(`Sending Email #2 to ${payment.customer_email}`);
-              await sendDunningEmail(payment, 2);
-              db.markEmailSent(payment.stripe_invoice_id);
-              await notifyEmailSent(payment, 2);
-      }
+        for (const payment of dueForEmail2) {
+                  console.log(`Sending Email #2 to ${payment.customer_email}`);
+                  await sendDunningEmail(payment, 2);
+                  db.markEmailSent(payment.stripe_invoice_id);
+                  await notifyEmailSent(payment, 2);
+        }
 
                 // Email #3 - after 7 days
                 const dueForEmail3 = db.getDueForEmail(3, 7);
-      for (const payment of dueForEmail3) {
-              console.log(`Sending Email #3 to ${payment.customer_email}`);
-              await sendDunningEmail(payment, 3);
-              db.markEmailSent(payment.stripe_invoice_id);
-              await notifyEmailSent(payment, 3);
-              await notifyFinalWarning(payment);
-      }
+        for (const payment of dueForEmail3) {
+                  console.log(`Sending Email #3 to ${payment.customer_email}`);
+                  await sendDunningEmail(payment, 3);
+                  db.markEmailSent(payment.stripe_invoice_id);
+                  await notifyEmailSent(payment, 3);
+                  await notifyFinalWarning(payment);
+        }
 
                 console.log('Dunning check complete');
 });
 
 // ============ START SERVER ============
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-      console.log(`Dunning service running on port ${PORT}`);
-      console.log(`Active failed payments: ${db.getAllActive().length}`);
-});
+async function start() {
+        // Initialize database first
+  await db.initDb();
+
+  const PORT = process.env.PORT || 3000;
+        app.listen(PORT, () => {
+                  console.log(`Dunning service running on port ${PORT}`);
+                  console.log(`Active failed payments: ${db.getAllActive().length}`);
+        });
+}
+
+start().catch(console.error);
